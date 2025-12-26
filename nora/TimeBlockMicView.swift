@@ -21,38 +21,10 @@ struct TimeBlockMicView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                if model.isGeneratingPlan {
-                    Text("Generating your plan…")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                } else if model.isRecording {
+                if model.isRecording {
                     Text("Listening…")
                         .font(.title3)
                         .foregroundColor(.secondary)
-                } else if let errorMessage = model.errorMessage {
-                    VStack(spacing: 12) {
-                        Text("Error")
-                            .font(.title3)
-                            .foregroundColor(.red)
-                        
-                        Text(errorMessage)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                        
-                        Button(action: {
-                            model.retryGeneration()
-                        }) {
-                            Text("Retry")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 12)
-                                .background(Color.blue)
-                                .cornerRadius(8)
-                        }
-                    }
                 } else {
                     Text("Tap to record")
                         .font(.title3)
@@ -63,7 +35,7 @@ struct TimeBlockMicView: View {
             Spacer()
             
             ZStack {
-                if model.isRecording || model.isGeneratingPlan {
+                if model.isRecording {
                     Circle()
                         .fill(Color.blue.opacity(0.2))
                         .frame(width: 200, height: 200)
@@ -88,43 +60,19 @@ struct TimeBlockMicView: View {
                         )
                 }
                 
-                if model.isGeneratingPlan {
+                Button(action: handleMicTap) {
                     ZStack {
                         Circle()
-                            .fill(Color.blue)
+                            .fill(model.isRecording ? Color.red : Color.blue)
                             .frame(width: 120, height: 120)
-                            .shadow(color: Color.blue.opacity(0.4), radius: 20, x: 0, y: 10)
+                            .shadow(color: model.isRecording ? Color.red.opacity(0.4) : Color.blue.opacity(0.4), radius: 20, x: 0, y: 10)
                         
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.5)
-                    }
-                } else if model.errorMessage != nil {
-                    ZStack {
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 120, height: 120)
-                            .shadow(color: Color.red.opacity(0.4), radius: 20, x: 0, y: 10)
-                        
-                        Image(systemName: "exclamationmark.triangle.fill")
+                        Image(systemName: "mic.fill")
                             .font(.system(size: 50))
                             .foregroundColor(.white)
                     }
-                } else {
-                    Button(action: handleMicTap) {
-                        ZStack {
-                            Circle()
-                                .fill(model.isRecording ? Color.red : Color.blue)
-                                .frame(width: 120, height: 120)
-                                .shadow(color: model.isRecording ? Color.red.opacity(0.4) : Color.blue.opacity(0.4), radius: 20, x: 0, y: 10)
-                            
-                            Image(systemName: "mic.fill")
-                                .font(.system(size: 50))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .disabled(model.isRecording)
                 }
+                .disabled(model.isRecording)
             }
             .frame(height: 250)
             
@@ -134,10 +82,7 @@ struct TimeBlockMicView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
         .onChange(of: model.isRecording) { _, isRecording in
-            pulseAnimation = isRecording || model.isGeneratingPlan
-        }
-        .onChange(of: model.isGeneratingPlan) { _, isGenerating in
-            pulseAnimation = isGenerating || model.isRecording
+            pulseAnimation = isRecording
         }
     }
     

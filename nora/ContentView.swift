@@ -17,8 +17,37 @@ struct ContentView: View {
     @State private var editingItem: NoraItem?
     @State private var showingTimeBlockSheet = false
     
+    #if DEBUG
+    @State private var aiPingStatus: String?
+    @State private var showingAIPingAlert = false
+    private let aiService = AIService()
+    #endif
+    
     var body: some View {
         NavigationStack {
+            #if DEBUG
+            Text("")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Ping AI") {
+                            Task {
+                                do {
+                                    let reply = try await aiService.ping()
+                                    aiPingStatus = "✅ SUCCESS: \(reply)"
+                                } catch {
+                                    aiPingStatus = "❌ FAILED: \(error.localizedDescription)"
+                                }
+                                showingAIPingAlert = true
+                            }
+                        }
+                    }
+                }
+                .alert("AI Ping Result", isPresented: $showingAIPingAlert) {
+                    Button("OK") { aiPingStatus = nil }
+                } message: {
+                    Text(aiPingStatus ?? "")
+                }
+            #endif
             GeometryReader { geo in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
@@ -106,7 +135,9 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 12) {
-                    Button(action: { showingTimeBlockSheet = true }) {
+                    Button(action: {
+                        showingTimeBlockSheet = true
+                    }) {
                         Text("Time-block with Nora")
                             .font(.headline)
                             .foregroundColor(.blue)
